@@ -1,12 +1,14 @@
-# backend/services/orchestration.py
+# FILE: backend/services/orchestration.py
+# This file contains the AgentOrchestrator class for managing multi-agent workflows
 
 import asyncio
 import json
 import time
 from typing import Dict, List, Any, Union
+from dataclasses import asdict  # Added missing import
 
 from backend.agents.base_agent import BaseKillerAgent, AgentContext, AgentResult
-from backend.agents.system_nexus import SystemNexus
+from backend.agents.system_nexus import SystemNexus # Import the SystemNexus agent
 import structlog
 
 logger = structlog.get_logger()
@@ -20,6 +22,7 @@ class AgentOrchestrator:
 
     def __init__(self, agents: Dict[str, BaseKillerAgent]):
         self.agents = agents
+        # Ensure SystemNexus is in the agents dictionary if it's supposed to be used
         if "System Nexus" not in self.agents:
             logger.warning("System Nexus agent not found in the agents dictionary during orchestrator initialization. It will not be available for routing.")
 
@@ -47,11 +50,12 @@ class AgentOrchestrator:
         results = {}
         total_cost = 0.0
         total_execution_time = 0.0
-        all_tool_calls = []
-        current_context = context
+        all_tool_calls = [] # Collect all tool calls made during the workflow
+        current_context = context # Context that evolves during sequential workflows
 
         try:
             if intent_type == "external_tool_call":
+                # Direct route to System Nexus for external tool interactions
                 if "System Nexus" in self.agents:
                     logger.info("Routing to System Nexus for external tool call", user_request=user_request)
                     result = await self.agents["System Nexus"].execute(user_request, current_context)
@@ -98,6 +102,8 @@ class AgentOrchestrator:
 
             elif workflow_type == "hybrid":
                 logger.info("Executing hybrid workflow (as sequential fallback)", agents=recommended_agents, user_request=user_request)
+                # For simplicity, hybrid is executed as sequential here.
+                # In a more advanced system, this would involve a complex state machine or a supervisor agent.
                 results, total_cost, total_execution_time, updated_context, workflow_tool_calls = \
                     await self._execute_sequential_workflow(user_request, recommended_agents, current_context)
                 current_context = updated_context
@@ -118,11 +124,12 @@ class AgentOrchestrator:
             return {
                 "success": all(r.success for r in results.values()),
                 "workflow_type": workflow_type,
-                "results": {name: result for name, result in results.items()},
+                "results": {name: result for name, result in results.items()}, # Convert to dict
                 "total_execution_time": total_execution_time,
                 "total_cost": total_cost,
-                "context_updates": asdict(current_context),
-                "tool_calls": all_tool_calls
+                "context_updates": asdict(current_context), # Return the final updated context as dict
+                "tool_calls": all_tool_calls, # Propagate tool calls
+                "routing_decision": routing_decision  # Added this to match what main.py expects
             }
 
         except Exception as e:
@@ -134,7 +141,8 @@ class AgentOrchestrator:
                 "total_execution_time": total_execution_time,
                 "total_cost": total_cost,
                 "context_updates": asdict(current_context),
-                "tool_calls": all_tool_calls
+                "tool_calls": all_tool_calls,
+                "routing_decision": routing_decision  # Added this to match what main.py expects
             }
 
     async def _execute_single_agent(
@@ -176,7 +184,10 @@ class AgentOrchestrator:
                 continue
 
             agent = self.agents[agent_name]
-            processed_request = request
+
+            # The request for subsequent agents might be a refinement based on previous results
+            # For now, it's the original request, but this is a key extension point.
+            processed_request = request # Or enhance_request_with_previous_results(request, results)
 
             result = await agent.execute(processed_request, current_context)
             results[agent_name] = result
@@ -185,12 +196,14 @@ class AgentOrchestrator:
             total_time += result.execution_time
             workflow_tool_calls.extend(result.tool_calls)
 
+            # Update context for the next agent in the sequence
             if result.context_updates:
                 current_context = self._merge_context(current_context, result.context_updates)
             
+            # If any agent in a sequence fails, you might want to stop or continue based on policy
             if not result.success:
                 logger.warning("Agent failed in sequential workflow, stopping sequence.", agent_name=agent_name)
-                break
+                break # Stop if one agent fails
 
         return results, total_cost, total_time, current_context, workflow_tool_calls
 
@@ -211,11 +224,12 @@ class AgentOrchestrator:
             else:
                 logger.warning("Agent not found for parallel workflow, skipping", agent_name=agent_name)
 
+        # Run all selected agent tasks concurrently
         raw_results = await asyncio.gather(*tasks, return_exceptions=True)
 
         results = {}
         total_cost = 0.0
-        max_time = 0.0
+        max_time = 0.0 # Max time for parallel is the time of the longest running task
         merged_context_updates = {}
         workflow_tool_calls = []
 
@@ -230,28 +244,47 @@ class AgentOrchestrator:
                     execution_time=0.0, cost=0.0, confidence_score=0.0
                 )
             else:
-                result = result_or_exception
+                result = result_or_exception # It's an AgentResult object
                 total_cost += result.cost
                 max_time = max(max_time, result.execution_time)
-                merged_context_updates.update(result.context_updates)
+                merged_context_updates.update(result.context_updates) # Merge context updates from all parallel agents
                 workflow_tool_calls.extend(result.tool_calls)
 
             results[agent_name] = result
 
+        # The final context will be the original context merged with all parallel updates
         final_context = self._merge_context(context, merged_context_updates)
 
         return results, total_cost, max_time, final_context, workflow_tool_calls
     
     def _merge_context(self, original: AgentContext, updates: Dict[str, Any]) -> AgentContext:
         """Merges updates into the AgentContext instance."""
+        # Convert dataclass to dict, update, then convert back.
+        # This handles nested fields like lists/dicts by replacing them if a new value is provided.
         merged_dict = asdict(original)
         
         for key, value in updates.items():
             if isinstance(value, list) and key in merged_dict and isinstance(merged_dict[key], list):
-                merged_dict[key].extend(v for v in value if v not in merged_dict[key])
+                # For lists, extend or replace if explicit (e.g., challenges, goals)
+                merged_dict[key].extend(v for v in value if v not in merged_dict[key]) # Add unique items
             elif isinstance(value, dict) and key in merged_dict and isinstance(merged_dict[key], dict):
+                # For dictionaries, deep merge
                 merged_dict[key].update(value)
             else:
+                # For other types, just replace
                 merged_dict[key] = value
         
+        # Reconstruct AgentContext from the merged dictionary
         return AgentContext(**merged_dict)
+
+    def get_system_metrics(self):
+        """Get overall system performance metrics."""
+        return {
+            "total_agents": len(self.agents),
+            "active_agents": len([agent for agent in self.agents.values() if hasattr(agent, 'status') and agent.status.value == 'idle']),
+            "performance": {
+                "total_requests": sum(getattr(agent, 'performance_metrics', {}).get('total_executions', 0) for agent in self.agents.values()),
+                "successful_requests": sum(getattr(agent, 'performance_metrics', {}).get('successful_executions', 0) for agent in self.agents.values()),
+                "average_response_time": sum(getattr(agent, 'performance_metrics', {}).get('avg_execution_time', 0) for agent in self.agents.values()) / len(self.agents) if self.agents else 0
+            }
+        }

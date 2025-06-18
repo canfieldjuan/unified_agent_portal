@@ -1,4 +1,5 @@
-# backend/services/ai_service.py
+# FILE: backend/services/ai_service.py
+# This file contains the OpenSourceAIService class for standard AI model interactions
 
 import os
 import aiohttp
@@ -13,6 +14,7 @@ class OpenSourceAIService:
     and provides foundational AI services like task detection and elite agent routing decision.
     """
     def __init__(self, config: Dict):
+        self.config = config  # Store config as instance variable
         self.openrouter_key = config.get('openrouter_api_key')
         self.session: aiohttp.ClientSession = None # Will be initialized on startup
 
@@ -32,8 +34,7 @@ class OpenSourceAIService:
         if not self.session:
             raise RuntimeError("aiohttp session not initialized. Call initialize() first.")
         
-        # --- CRITICAL FIX: Removed duplicate 'self' ---
-        if not self.openrouter_key: # Corrected check for key
+        if not self.openrouter_key: # Fixed: Removed duplicate 'self'
             raise ValueError("OPENROUTER_API_KEY is not configured for OpenSourceAIService.")
 
         headers = {
@@ -73,10 +74,15 @@ class OpenSourceAIService:
             'provider': 'OpenRouter'
         }
 
-    async def detect_task_type(self, user_prompt: str, classifier_model: str, valid_types: List[str]) -> str:
+    async def detect_task_type(self, user_prompt: str, classifier_model: str = None, valid_types: List[str] = None) -> str:
         """
         Detects the task type from a user prompt using a classifier model.
         """
+        if not classifier_model:
+            classifier_model = self.config.get('classifier_model', 'openai/gpt-4o-mini')
+        if not valid_types:
+            valid_types = self.config.get('valid_task_types', ['simple_qa', 'code_generation', 'creative_writing', 'business_strategy'])
+            
         categories = ", ".join(f'"{t}"' for t in valid_types)
         system_prompt = f"Classify the user's message into one of these categories: {categories}. Respond with ONLY the category name in quotes."
         

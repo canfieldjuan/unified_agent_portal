@@ -1,8 +1,9 @@
-# backend/agents/intent_classifier.py
+# FILE: backend/agents/intent_classifier.py
+# This file contains the IntentClassifier class for routing user requests to appropriate agents
 
 import json
 import openai
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional  # Added Optional import
 
 from backend.agents.base_agent import AgentContext
 import structlog
@@ -42,7 +43,7 @@ BUSINESS CONTEXT:
 Analyze this request and determine optimal agent routing based on available agents and tools.
 """
         try:
-            response = await self.client.chat.completions.acreate(
+            response = await self.client.chat.completions.create(  # Fixed: create not acreate
                 model="gpt-4-turbo-preview",
                 messages=[
                     {"role": "system", "content": system_prompt},

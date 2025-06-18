@@ -1,4 +1,5 @@
-# backend/agents/base_agent.py
+# FILE: backend/agents/base_agent.py
+# This file contains the base classes and data structures for all AI agents
 
 import time
 from datetime import datetime
@@ -96,7 +97,7 @@ class BaseKillerAgent:
             raise RuntimeError("OpenAI client not initialized. Check OPENAI_API_KEY.")
 
         try:
-            response = await self.client.chat.completions.acreate(
+            response = await self.client.chat.completions.create(  # Fixed: create not acreate
                 model=model,
                 messages=[
                     {"role": "system", "content": system_prompt},
