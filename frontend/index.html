@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite Agent Command Center</title>
+    <link rel="stylesheet" href="/static/enhanced-style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-main">
+                <h1>🔥 Elite Agent Command Center</h1>
+                <p>Coordinate killer AI agents for business domination. Natural language interface for Growth, Conversion, Design, Email, Data, Code & System experts.</p>
+            </div>
+            
+            <div class="agent-status-bar" id="agentStatusBar">
+                <div class="agent-status loading">Loading agent status...</div>
+            </div>
+            
+            <div class="status-bar">
+                <div class="status-item active" id="session-status">Session: ...</div>
+                <div class="status-item" id="model-status">Mode: Elite Routing</div>
+                <div class="status-item" id="cost-status">Cost: $0.00</div>
+                <div class="status-item" id="time-status">Time: 0s</div>
+                <div class="status-item" id="agents-status">Agents: 0</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="context-panel">
+                    <h3>🎯 Business Context</h3>
+                    <p class="context-help">Provide context for better agent performance</p>
+                    
+                    <div class="context-form">
+                        <div class="form-group">
+                            <label for="businessType">Business Type</label>
+                            <select id="businessType" class="context-input">
+                                <option value="">Select...</option>
+                                <option value="SaaS">SaaS</option>
+                                <option value="E-commerce">E-commerce</option>
+                                <option value="Service Business">Service Business</option>
+                                <option value="Startup">Startup</option>
+                                <option value="Enterprise">Enterprise</option>
+                                <option value="Agency">Agency</option>
+                                <option value="Consulting">Consulting</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="industry">Industry</label>
+                            <input type="text" id="industry" class="context-input" placeholder="e.g., Marketing Technology">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="revenue">Current Revenue</label>
+                            <select id="revenue" class="context-input">
+                                <option value="">Select...</option>
+                                <option value="$0-10K/month">$0-10K/month</option>
+                                <option value="$10K-50K/month">$10K-50K/month</option>
+                                <option value="$50K-100K/month">$50K-100K/month</option>
+                                <option value="$100K-500K/month">$100K-500K/month</option>
+                                <option value="$500K+/month">$500K+/month</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="audience">Target Audience</label>
+                            <input type="text" id="audience" class="context-input" placeholder="e.g., Small business owners">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="challenges">Main Challenges</label>
+                            <textarea id="challenges" class="context-input" rows="3" placeholder="What are your biggest business challenges?"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="goals">Goals</label>
+                            <textarea id="goals" class="context-input" rows="3" placeholder="What do you want to achieve?"></textarea>
+                        </div>
+                        
+                        <button class="save-context-btn" id="saveContextBtn">💾 Save Context</button>
+                    </div>
+                </div>
+                
+                <div class="quick-actions">
+                    <h4>⚡ Quick Actions</h4>
+                    <button class="quick-btn" onclick="insertQuickMessage('Help me grow my business to the next level')">📈 Growth Strategy</button>
+                    <button class="quick-btn" onclick="insertQuickMessage('Create killer marketing copy for my product')">🎯 Marketing Copy</button>
+                    <button class="quick-btn" onclick="insertQuickMessage('Optimize my website for conversions')">🎨 Design Optimization</button>
+                    <button class="quick-btn" onclick="insertQuickMessage('Build an email sequence for my customers')">📧 Email Campaign</button>
+                    <button class="quick-btn" onclick="insertQuickMessage('Analyze my business data for insights')">📊 Data Analysis</button>
+                    <button class="quick-btn" onclick="insertQuickMessage('Optimize my code and architecture')">⚙️ Technical Audit</button>
+                </div>
+            </div>
+
+            <div class="chat-section">
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message ai welcome">
+                            <div class="agent-avatar">🤖</div>
+                            <div class="message-content">
+                                <div class="agent-name">Elite Command Center</div>
+                                <div class="message-text">
+                                    🔥 **Elite Agent Command Center Online**
+                                    
+                                    You now have access to 7 killer AI agents:
+                                    • **Growth Assassin** - Business strategy & scaling
+                                    • **Conversion Predator** - Marketing copy & funnels    
+                                    • **Interface Destroyer** - UI/UX & design
+                                    • **Email Revenue Engine** - Email marketing
+                                    • **Data Oracle** - Analytics & insights
+                                    • **Code Overlord** - Code optimization
+                                    • **System Dominator** - Infrastructure & scaling
+                                    
+                                    **Natural Language Interface:** Just tell me what you need and I'll coordinate the right agents.
+                                    
+                                    Examples:
+                                    - "Help me grow my SaaS from $50K to $500K MRR"
+                                    - "Create a complete sales funnel for my product"    
+                                    - "I need a technical audit and optimization plan"
+                                </div>
+                                <div class="message-meta">Ready • All agents online</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-area">
+                        <div class="drop-zone" id="dropZone">
+                            <p>📁 Drag & Drop Files Here or Click to Select</p>
+                        </div>
+                        <div class="file-attachments" id="fileAttachments"></div>
+                        <input type="file" id="fileInput" multiple style="display: none;">
+
+                        <div class="agent-mode-selector">
+                            <div class="mode-group">
+                                <label class="mode-label">Agent Mode</label>
+                                <div class="mode-options">
+                                    <input type="radio" id="autoMode" name="agentMode" value="auto" checked>
+                                    <label for="autoMode" class="mode-option">🧠 Auto Route</label>
+                                    
+                                    <input type="radio" id="eliteMode" name="agentMode" value="elite">
+                                    <label for="eliteMode" class="mode-option">🔥 Elite Direct</label>
+                                    
+                                    <input type="radio" id="standardMode" name="agentMode" value="standard">
+                                    <label for="standardMode" class="mode-option">💬 Standard Chat</label>
+                                </div>
+                            </div>
+                            
+                            <div class="elite-selector" id="eliteSelector" style="display: none;">
+                                <label class="mode-label">Select Agent</label>
+                                <select id="specificAgent" class="agent-select">
+                                    <option value="">Auto-Coordinate</option>
+                                    <option value="Growth Assassin">📈 Growth Assassin</option>
+                                    <option value="Conversion Predator">🎯 Conversion Predator</option>
+                                    <option value="Interface Destroyer">🎨 Interface Destroyer</option>
+                                    <option value="Email Revenue Engine">📧 Email Revenue Engine</option>
+                                    <option value="Data Oracle">📊 Data Oracle</option>
+                                    <option value="Code Overlord">⚙️ Code Overlord</option>
+                                    <option value="System Dominator">🏗️ System Dominator</option>
+                                    <option value="System Nexus">🔗 System Nexus</option> </select>
+                            </div>
+                        </div>
+
+                        <div class="input-row">
+                            <div class="input-group">
+                                <textarea 
+                                    class="input-field" 
+                                    id="messageInput" 
+                                    placeholder="Tell me what you need... (e.g., 'Help me scale my business' or 'Create marketing copy for my SaaS product')" 
+                                    rows="2"
+                                ></textarea>
+                            </div>
+                            <button class="send-button" id="sendButton">🚀</button>
+                        </div>
+                        
+                        <div class="example-prompts" id="examplePrompts">
+                            <div class="prompt-category">
+                                <span class="category-title">💡 Try these:</span>
+                                <button class="example-prompt" onclick="insertQuickMessage('Analyze my competitors and create a growth strategy')">Competitive analysis & strategy</button>
+                                <button class="example-prompt" onclick="insertQuickMessage('Create a complete sales funnel with copy and design')">Complete sales funnel</button>
+                                <button class="example-prompt" onclick="insertQuickMessage('Technical audit and scaling plan for 10x growth')">Technical scaling audit</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-sidebar">
+                <div class="workflow-panel" id="workflowPanel" style="display: none;">
+                    <h4>🔄 Active Workflow</h4>
+                    <div class="workflow-steps" id="workflowSteps">
+                        </div>
+                </div>
+                
+                <div class="performance-panel">
+                    <h4>📊 Agent Performance</h4>
+                    <div class="performance-stats" id="performanceStats">
+                        <div class="stat-item">
+                            <span class="stat-label">Requests Handled</span>
+                            <span class="stat-value" id="totalRequests">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Success Rate</span>
+                            <span class="stat-value" id="successRate">100%</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Avg Response Time</span>
+                            <span class="stat-value" id="avgResponseTime">0.0s</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="activity-panel">
+                    <h4>⚡ Recent Activity</h4>
+                    <div class="activity-log" id="activityLog">
+                        <div class="activity-item">
+                            <span class="activity-time">Ready</span>
+                            <span class="activity-desc">All agents online and ready</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/enhanced-script.js"></script>
+</body>
+</html>
